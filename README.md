@@ -142,8 +142,8 @@ void delay_with_buttons(unsigned int blink_state)
 Esta función mantiene los LEDs en un estado (`blink_state`) durante un tiempo, pero sin dejar de atender los botones:
 
 1. El tiempo total (`DELAY`) se divide en intervalos cortos (`POLL_INTERVAL`), que dan `100000000 / 100000 = 1000` vueltas.
-2. En cada vuelta lee los botones. `& 0xF` se queda solo con los 4 bits que corresponden a los botones.
-3. Escribe en los LEDs la **OR** entre el estado del parpadeo y los botones: un LED se enciende si toca encenderlo por el parpadeo **o** si su botón está presionado.
+2. En cada vuelta lee los botones. `& 0xF` se queda solo con los 4 bits que corresponden a los botones de la FPGA.
+3. Escribe en los LEDs la **OR** entre el estado del parpadeo y los botones: un LED se enciende si toca encenderlo por el parpadeo o si su botón está presionado.
 4. Espera un intervalo corto con un bucle vacío. El bucle también usa `volatile` para que el compilador no lo elimine.
 
 Si la espera fuera un solo bucle largo, el programa no leería los botones hasta terminarlo, y la respuesta a una pulsación se notaría con retraso. Dividirla en intervalos permite revisar los botones unas 1000 veces por cada fase del parpadeo.
@@ -166,21 +166,21 @@ El programa repite indefinidamente dos fases de igual duración:
 | Fase | `blink_state` | Comportamiento de los LEDs |
 | --- | :---: | --- |
 | ON | `0xF` = `1111` | Los 4 LEDs encendidos, sin importar los botones. |
-| OFF | `0x0` = `0000` | Solo se encienden los LEDs cuyo botón está presionado. |
+| OFF | `0x0` = `0000` | Solo se encienden los LED's cuyo botón este presionado en ese momento. |
 
 ### 6.4 Comportamiento esperado
 
+Se espera que con este código la FPGA se comporte de la siguiente manera:
+
 - Los 4 LEDs parpadean de forma continua.
 - Al mantener presionado un botón, su LED queda encendido también durante la fase OFF, por lo que deja de parpadear mientras el botón siga presionado.
-- Al soltarlo, ese LED vuelve a parpadear con los demás.
-
-La duración de cada fase depende de la velocidad del procesador, ya que la espera se hace contando iteraciones y no con un temporizador.
+- Al soltarlo, ese LED vuelve a parpadear junto con los demás.
 
 ---
 
 ## 7. Evidencia de funcionamiento en FPGA
 
-https://github.com/user-attachments/assets/REEMPLAZAR-CON-EL-ENLACE-DEL-VIDEO
+![Video_Evidencia](doc/Video_Evidencia.mp4)
 
 En el video se observa que:
 
@@ -188,19 +188,19 @@ En el video se observa que:
 2. Al mantener presionado un botón, su LED permanece encendido mientras los demás siguen parpadeando.
 3. Al soltar el botón, el LED vuelve a parpadear.
 
-El comportamiento observado coincide con el esperado a partir del análisis de `main.c`.
+El comportamiento observado coincide con el esperado a partir del análisis del archivo que se utiliza en el vivado: `main.c`.
 
 ---
 
 
 ## 8. Conclusiones
 
-- **SoC sin código HDL:** el *Block Design* permitió construir un sistema completo (procesador, memoria, buses y periféricos) conectando bloques, sin escribir Verilog. Vivado generó automáticamente el módulo superior y la asignación de pines a partir de los archivos de la placa.
-- **Integración PS–PL:** el procesador ARM de la PS controló un periférico implementado en la PL a través del bus AXI. Para el programa, el GPIO es simplemente un par de direcciones de memoria, lo que muestra cómo el software accede al hardware mediante registros mapeados en memoria.
-- **Funciones de los bloques de soporte:** además del procesador y los periféricos, el sistema necesita bloques que los integren: el *AXI Interconnect* dirige cada transacción al periférico correcto según su dirección, y el *Processor System Reset* sincroniza el reset con el reloj de la PL.
-- **Hardware y software separados:** el archivo XSA permitió desarrollar el software en Vitis a partir de la descripción del hardware generada en Vivado. Una vez definido el hardware, el comportamiento del sistema se puede cambiar modificando solo el programa en C, sin volver a sintetizar.
-- **Diferencia con los laboratorios anteriores:** en los laboratorios anteriores el comportamiento se describía directamente en hardware. Aquí, la lógica de parpadeo y la lectura de botones se ejecutan en software, de forma secuencial, y la PL se usa solo para los periféricos. Esto facilita los cambios, aunque el tiempo de respuesta depende del programa, como se ve en la espera por conteo de iteraciones.
-- **Ubicación de los archivos en Vitis:** durante la práctica se encontraron dos problemas relacionados con las rutas. Vitis no permitió usar como espacio de trabajo una carpeta creada dentro del proyecto de Vivado, y al buscar el archivo `.xsa` para crear la plataforma, las rutas muy largas superaban el límite de caracteres que admite la herramienta. La solución fue ubicar el espacio de trabajo de Vitis en una carpeta aparte, con una ruta corta. Conviene definir estas ubicaciones desde el inicio para evitar tener que repetir la creación de la plataforma.
+- El *Block Design* permitió construir un sistema completo (procesador, memoria, buses y periféricos) conectando bloques, sin escribir Verilog y utilizando por lo contrario, código en C que fue ejecutado en Vitis. Vivado generó automáticamente el módulo superior y la asignación de pines a partir de los archivos de la placa.
+- El procesador ARM de la PS controló un periférico implementado en la PL a través del bus AXI. Para el programa, el GPIO es simplemente un par de direcciones de memoria, lo que muestra cómo el software accede al hardware mediante registros mapeados en memoria.
+- Además del procesador y los periféricos, el sistema necesita bloques que los integren: el *AXI Interconnect* dirige cada transacción al periférico correcto según su dirección, y el *Processor System Reset* sincroniza el reset con el reloj de la PL.
+- El archivo .XSA permitió desarrollar el software en Vitis a partir de la descripción del hardware generada en Vivado. Una vez definido el hardware, el comportamiento del sistema se puede cambiar modificando solo el programa en C, sin volver a sintetizar. De alguna forma se podría decir que ese archivo es el puente que conecta Vivado y Vitis.
+- En los laboratorios anteriores el comportamiento se describía directamente en hardware. Aquí, la lógica de parpadeo y la lectura de botones se ejecutan en software, de forma secuencial, y la PL se usa solo para los periféricos. Esto facilita los cambios, aunque el tiempo de respuesta depende del programa.
+- Durante la práctica se encontraron dos problemas relacionados con las rutas. Vitis no permitió usar como espacio de trabajo una carpeta creada dentro del proyecto de Vivado, y al buscar el archivo `.xsa` para crear la plataforma, las rutas muy largas superaban el límite de caracteres que admite la herramienta. La solución fue ubicar el espacio de trabajo de Vitis en una carpeta aparte, con una ruta corta. Conviene definir estas ubicaciones desde el inicio para evitar tener que repetir la creación de la plataforma.
 
 ---
 
