@@ -7,7 +7,9 @@
 - Milton Nicolas Rincón Caicedo - 1021312724
 
 **Semestre:** 2026-2
+
 **Plataforma:** Digilent Zybo Z7-10 (Zynq-7000)
+
 **Herramientas:** Vivado (Block Design) y Vitis
 
 ---
@@ -54,7 +56,7 @@ En esta práctica, el procesador está en la PS, y la memoria BRAM y el GPIO de 
 
 ## 3. Diseño de bloques en Vivado
 
-![Block Design](imgs/block_design.png)
+![Block Design](doc/block_design.pdf)
 
 ### 3.1 Bloques utilizados
 
@@ -82,7 +84,7 @@ En esta práctica, el procesador está en la PS, y la memoria BRAM y el GPIO de 
 
 ## 4. Mapa de direcciones
 
-![Address Editor](imgs/address_editor.png)
+![Address Editor](doc/address_editor.png)
 
 En el *Address Editor* se asignó a cada periférico un rango de direcciones dentro del espacio del procesador. El rango del GPIO se redujo de 64 KB a 4 KB, ya que solo tiene unos pocos registros.
 
@@ -97,7 +99,7 @@ La dirección base del GPIO, `0x41200000`, es la que usa el programa en C para a
 3. **Plataforma en Vitis:** a partir del XSA se creó un *Platform Component* para el procesador `ps7_cortexa9_0`, sin sistema operativo (*standalone*).
 4. **Aplicación:** sobre esa plataforma se creó una aplicación vacía, se agregó `main.c`, se compiló con *Build* y se ejecutó en la placa con *Run*.
 
-![Vitis](imgs/vitis.png)
+![Vitis](doc/vitis.png)
 
 ---
 
@@ -190,6 +192,7 @@ El comportamiento observado coincide con el esperado a partir del análisis de `
 
 ---
 
+
 ## 8. Conclusiones
 
 - **SoC sin código HDL:** el *Block Design* permitió construir un sistema completo (procesador, memoria, buses y periféricos) conectando bloques, sin escribir Verilog. Vivado generó automáticamente el módulo superior y la asignación de pines a partir de los archivos de la placa.
@@ -197,3 +200,14 @@ El comportamiento observado coincide con el esperado a partir del análisis de `
 - **Funciones de los bloques de soporte:** además del procesador y los periféricos, el sistema necesita bloques que los integren: el *AXI Interconnect* dirige cada transacción al periférico correcto según su dirección, y el *Processor System Reset* sincroniza el reset con el reloj de la PL.
 - **Hardware y software separados:** el archivo XSA permitió desarrollar el software en Vitis a partir de la descripción del hardware generada en Vivado. Una vez definido el hardware, el comportamiento del sistema se puede cambiar modificando solo el programa en C, sin volver a sintetizar.
 - **Diferencia con los laboratorios anteriores:** en los laboratorios anteriores el comportamiento se describía directamente en hardware. Aquí, la lógica de parpadeo y la lectura de botones se ejecutan en software, de forma secuencial, y la PL se usa solo para los periféricos. Esto facilita los cambios, aunque el tiempo de respuesta depende del programa, como se ve en la espera por conteo de iteraciones.
+- **Ubicación de los archivos en Vitis:** durante la práctica se encontraron dos problemas relacionados con las rutas. Vitis no permitió usar como espacio de trabajo una carpeta creada dentro del proyecto de Vivado, y al buscar el archivo `.xsa` para crear la plataforma, las rutas muy largas superaban el límite de caracteres que admite la herramienta. La solución fue ubicar el espacio de trabajo de Vitis en una carpeta aparte, con una ruta corta. Conviene definir estas ubicaciones desde el inicio para evitar tener que repetir la creación de la plataforma.
+
+---
+
+## 9. Referencias
+
+- [*Lab04 – SoC Zynq-7000*. (2026). Guía del laboratorio, repositorio 2026-2_Lab_Electronica_Digital_2_G3yG4. GitHub.](https://github.com/jovelasquezs/2026-2_Lab_Electronica_Digital_2_G3yG4/blob/main/labs/lab04/README.md)
+
+- [FPGAs for Beginners. (2023, 28 julio). *Zynq Part 1: Vivado block diagram (no Verilog/VHDL necessary!)*. YouTube.](https://www.youtube.com/watch?v=UZ3FnZNlcWk)
+
+- [AMD. (s. f.). *SoC AMD Zynq™ 7000*.](https://www.amd.com/es/products/adaptive-socs-and-fpgas/soc/zynq-7000.html)
