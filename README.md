@@ -24,7 +24,7 @@
 6. [Programa en C (`main.c`)](#6-programa-en-c-mainc)
 7. [Evidencia de funcionamiento en FPGA](#7-evidencia-de-funcionamiento-en-fpga)
 8. [Conclusiones](#8-conclusiones)
-
+9. [Referencias](#9-referencias)
 ---
 
 ## 1. Descripción de la práctica
